@@ -47,18 +47,3 @@ public class FileSearch {
     }
 }
 
-class ElementPath {
-    private Path path;
-    public ElementPath(Path path){
-        this.path = path;
-    }
-
-    public Path getPath() {
-        return this.path;
-    }
-
-    @Override
-    public String toString() {
-        return "";
-    }
-}

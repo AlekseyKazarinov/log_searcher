@@ -16,6 +16,8 @@ public class FileExtension {
         input = input.toLowerCase();
         return input.length() > 0 && input.matches("\\.[a-z0-9]+[.a-z0-9]*$");  // можно учесть случай последовательных расширений .
     }                                                                       // например, *.tar.gz
+
+
 }
 
 
