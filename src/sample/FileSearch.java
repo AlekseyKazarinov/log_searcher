@@ -19,9 +19,8 @@ public class FileSearch {
         return new String(Files.readAllBytes(Paths.get(fileName))).contains(word);
     }
 
-    /*
-    @Deprecated
-    public static boolean hasText(String text, String filename) throws IOException {
+
+    public static boolean hasText(String filename, String text) throws IOException {
         System.out.println("has Text opened");
         char[] chars = text.toCharArray();
         System.out.println("chars length = " + chars.length);
@@ -45,7 +44,21 @@ public class FileSearch {
             }
         }
         return false;
-    }*/
+    }
+}
 
+class ElementPath {
+    private Path path;
+    public ElementPath(Path path){
+        this.path = path;
+    }
 
+    public Path getPath() {
+        return this.path;
+    }
+
+    @Override
+    public String toString() {
+        return "";
+    }
 }

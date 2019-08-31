@@ -7,6 +7,7 @@ import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,43 +81,54 @@ public class Controller {
      * @return дерево файлов, содержащих заданный текст.
      */
     public TreeView<Path> search(String text, String dir, String fileExtension) throws IOException {
-        System.out.println("Вошёл в метод");
-        System.out.println("fileExtension = "+ fileExtension);
+        //System.out.println("Вошёл в метод");
+        //System.out.println("fileExtension = "+ fileExtension);
         Path startPath = Paths.get(dir);
-        Stream<File> stream = Files.walk(startPath)
+        Stream<Path> stream = Files.walk(startPath)
                 .filter(path -> !Files.isDirectory(path))
                 .map(path -> path.toFile())
                 .filter(file-> file.getAbsolutePath().endsWith(fileExtension))
+                .filter(file -> file.canRead())
                 .filter(file -> {
                     try {
-                        return FileSearch.containsWord(file.getAbsolutePath(), text);
+                        return FileSearch.containsWord(file.getAbsolutePath(), text); // ищет только в ASCII :(
                     } catch (IOException e) {
                         e.printStackTrace();
+                        return false;
                     }
                 })
+                .map(file -> file.toPath())
                 .peek(System.out::println);
-
-        List<File> list = stream.collect(Collectors.toList());
-        Iterator<File> it = list.iterator();
-        File file;
-        System.out.println("Перешёл к итератору");
-        boolean isAppropriateFile;
-        while (it.hasNext()) {
-            file = it.next();
-            if (file.canRead()) {
-                System.out.println(file.getAbsolutePath());
-
-                isAppropriateFile = FileSearch.containsWord(file.getAbsolutePath(), text);
-                if (isAppropriateFile) {
-                    System.out.println("подошёл " + file.getAbsolutePath());
-                }
-
+        List<Path> list = stream.collect(Collectors.toList());
+        TreeView<Path> treeView = new TreeView<>(new TreeItem<>(startPath));  // строим дерево от каталога, в котором ищем
+        int index = startPath.getNameCount();
+        for (Path path : list) {
+            for (int k = index; k < path.getNameCount(); k++) {
+                path.getName(k);
             }
         }
 
         return null;
     }
 
+
+    public static void createTree(TreeItem<Path> rootItem) throws IOException {
+
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue())) {
+
+            for (Path path : directoryStream) {
+
+                TreeItem<Path> newItem = new TreeItem<Path>(path);
+                newItem.setExpanded(true);
+
+                rootItem.getChildren().add(newItem);
+
+                if (Files.isDirectory(path)) {
+                    createTree(newItem);
+                }
+            }
+        }
+    }
 
     @FXML
     public void clickSearch(ActionEvent event) {
@@ -127,7 +139,9 @@ public class Controller {
         String textToSearch = textToSearchArea.getText();
         if (textToSearch.length() > 0 ) {
             String text = textToSearchArea.getText();
-            infoLabel.setText("Идёт поиск текста \"" + text.substring(0, Math.min(text.length(), 20))+ "...\"");
+            infoLabel.setText("Идёт поиск текста \""
+                    + text.substring(0, Math.min(text.length(), 20))
+                    + (text.length() >20 ? "...\"" : ""));
         } else {
             infoLabel.setText("Текст, который требуется найти, не введён.");
             return;
@@ -145,6 +159,14 @@ public class Controller {
             System.out.println(e);
         }
 
+        Path startPath = Paths.get(selectedDirArea.getText());
+        TreeItem<Path> root = new TreeItem<>(startPath);
+        try {
+            createTree(root);
+        } catch (Exception e ) {
+            // ignore
+        }
+        treeFiles = new TreeView<>(root);
 
     }
 }
