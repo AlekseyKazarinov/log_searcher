@@ -6,12 +6,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.nio.charset.Charset;
-
 
 public class Main extends Application {
     static Stage mainStage;
-    static String textToSearch;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -23,7 +20,6 @@ public class Main extends Application {
         primaryStage.setResizable(false);
         mainStage = primaryStage;
     }
-
 
     public static void main(String[] args) {
         launch(args);

@@ -2,26 +2,18 @@ package sample;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TouchEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 
 import javafx.event.ActionEvent;
 
 import java.io.*;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javafx.stage.DirectoryChooser;
 
-class InputGUIException extends RuntimeException{
-
-}
 
 public class Controller {
     public FlowPane flowPane;
@@ -40,17 +32,13 @@ public class Controller {
     @FXML
     TreeView<PathItem> treeFiles;
 
-    SelectionModel<TreeItem<PathItem>> selectionModel;
 
-
-    Stage mainStage = Main.mainStage;
-    Stage selectDirStage;
-    DirectoryChooser directoryChooser;
+    private Stage mainStage = Main.mainStage;
 
     @FXML
     public void clickSelectDir(ActionEvent event) {
-        directoryChooser = new DirectoryChooser();
-        File dir = directoryChooser.showDialog(selectDirStage);
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File dir = directoryChooser.showDialog(mainStage);
         if (dir != null) {
             selectedDirArea.setText(dir.getAbsolutePath());
         } else {
@@ -62,179 +50,134 @@ public class Controller {
         String input = fileExtensionField.getText();
         boolean isExtension = FileExtension.check(input);
         if (isExtension) {
-            infoLabel.setText(String.format("Установлено расширение файла: {0}", input));
+            infoLabel.setText("Установлено расширение файла: " + input);
             return true;
         } else {
-            infoLabel.setText("Неправильный формат расширения. Установлено исходное.");
             fileExtensionField.setText(FileExtension.DEFAULT_EXTENSION);
+            infoLabel.setText("Неправильное расширение. Установлено исходное.");
             return false;
         }
     }
 
-    @FXML
-    public void onTextFileTypeExited(TouchEvent event) {
-        infoLabel.setText("mouse event");
-    }
 
     /**
      * Построение дерева по файлам, в которых есть искомый текст.
+     * @param treeFiles дерево файлов, которое будет строиться
      * @param text искомый текст
      * @param dir абсолютный путь каталога, в котором будут искаться файлы.
-     * @return дерево файлов, содержащих заданный текст.
+     * @param fileExtension расширение файлов в дереве
      */
-    public TreeView<Path> search(String text, String dir, String fileExtension) throws IOException {
-        //System.out.println("Вошёл в метод");
-        //System.out.println("fileExtension = "+ fileExtension);
-        Path startPath = Paths.get(dir);
-        Stream<Path> stream = Files.walk(startPath)
-                .filter(path -> !Files.isDirectory(path))
-                .map(path -> path.toFile())
-                .filter(file -> file.getAbsolutePath().endsWith(fileExtension))
-                .filter(file -> file.canRead())
-                .filter(file -> {
-                    try {
-                        return FileSearch.containsWord(file.getAbsolutePath(), text); // ищет только в ASCII :(
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        return false;
-                    }
-                })
-                .map(file -> file.toPath())
-                .peek(System.out::println);
-        List<Path> list = stream.collect(Collectors.toList());
-        TreeView<Path> treeView = new TreeView<>(new TreeItem<>(startPath));  // строим дерево от каталога, в котором ищем
-        int index = startPath.getNameCount();
-        for (Path path : list) {
-            for (int k = index; k < path.getNameCount(); k++) {
-                Path some = path.getName(k);
-                System.out.println(some.toString());
-            }
+    private void search(TreeView<PathItem> treeFiles, String text, String dir, String fileExtension) {
+        Path startPath = Paths.get(selectedDirArea.getText());
+        TreeItem<PathItem> root = new TreeItem<>(new PathItem(startPath));
+        try {
+            FileSearch.createTreeRoot(root, fileExtensionField.getText(), text);
+            infoLabel.setText("Поиск файлов завершён.");
+        } catch (Exception e ) {
+            System.out.println(e.toString());
+            infoLabel.setText("Произошла ошибка при поиске файлов.");
         }
-        return null;
+        treeFiles.setRoot(root);
     }
 
+    /**
+     * Проверяет правильность введённых пользователем данных
+     * @param textToSearchArea поле с текстом, который ищется
+     * @param selectedDirArea поле, в котором хранится выбранный каталог
+     * @param fileExtensionField поле с расширением файлов, по которым осуществляется поиск
+     * @return удовлетворяет условиям или нет
+     */
+    private boolean checkInputFields(TextInputControl textToSearchArea,
+                                     TextInputControl selectedDirArea,
+                                     TextInputControl fileExtensionField) {
+        int count = 0;
+        // поле 1
+        if (checkFileExtensionField(fileExtensionField)) {
+            count++;
+        }
 
-    static void createTree(TreeItem<PathItem> rootItem, String fileExtension, String text) throws IOException {
-        boolean contains;
-        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())) {
+        // поле 2
+        String textToSearch = textToSearchArea.getText();
+        if (textToSearch.length() > 0 ) {
+            count++;
+        } else {
+            infoLabel.setText("Текст, который требуется найти, не введён.");
+        }
 
-            for (Path path : directoryStream) {
+        // поле 3
+        if (selectedDirArea.getText().length() != 0) {
+            count++;
+        } else {
+            infoLabel.setText("Не выбран каталог, в котором будем искать.");
+        }
 
-                TreeItem<PathItem> newItem = new TreeItem<>(new PathItem(path));
-
-                if (Files.isDirectory(path)) {
-                    rootItem.getChildren().add(newItem);
-                    newItem.setExpanded(false);
-                    createTree(newItem, fileExtension, text);
-                    // если в данном каталоге не оказалось подходящих файлов:
-                    if (newItem.getChildren().size() == 0) {
-                        rootItem.getChildren().remove(newItem);
-                    }
-                }
-
-               // System.out.println(path.getFileName());
-                if (!Files.isDirectory(path)){
-                    File file = path.toFile();
-                    System.out.println("not dir - "+path.getFileName()+ " " + file.getAbsolutePath());
-                    if (file.getAbsolutePath().endsWith(fileExtension)) {
-                        System.out.println("okay - "+path.getFileName());
-
-                        contains = FileSearch.hasText(file.getAbsolutePath(), text);  // true or false
-                        if (contains) {
-                            System.out.println("найден - " + file.getAbsolutePath());
-                            rootItem.getChildren().add(newItem);
-                        }
-                    }
-                }
-
-
-
-
-            }
+        // если все поля заполнены
+        if (count == 3) {
+            String text = textToSearchArea.getText();
+            infoLabel.setText("Идёт поиск текста \""
+                    + text.substring(0, Math.min(text.length(), 20))
+                    + (text.length() > 20 ? "...\"" : "\""));
+            return true;
+        } else {
+            return false;
         }
     }
-
-
 
 
     @FXML
     public void clickSearch(ActionEvent event) {
-        if (!checkFileExtensionField(fileExtensionField)) {
-            return;
-        };
-
-        String textToSearch = textToSearchArea.getText();
-
-        if (textToSearch.length() > 0 ) {
-            String text = textToSearchArea.getText();
-            infoLabel.setText("Идёт поиск текста \""
-                    + text.substring(0, Math.min(text.length(), 20))
-                    + (text.length() >20 ? "...\"" : "\""));
-        } else {
-            infoLabel.setText("Текст, который требуется найти, не введён.");
-            return;
-        }
-
-        if (selectedDirArea.getText().length() == 0) {
-            infoLabel.setText("Не выбран каталог, в котором будем искать.");
-            return;
-        }
-
-        /*try {
-            treeFiles = search(textToSearchArea.getText(), selectedDirArea.getText(), fileExtensionField.getText());
-        } catch (IOException e) {
-            infoLabel.setText("Ошибка при поиске файлов.");
-            System.out.println(e);
-        }*/
-
-        Path startPath = Paths.get(selectedDirArea.getText());
-        TreeItem<PathItem> root = new TreeItem<>(new PathItem(startPath));
-        try {
-            createTree(root, fileExtensionField.getText(), textToSearch);
-            infoLabel.setText("Поиск файлов завершён.");
-        } catch (Exception e ) {
-            System.out.println(e);
-            infoLabel.setText("Произошла ошибка при поиске файлов.");
-        }
-        //treeFiles = new TreeView<>(root);
-        treeFiles.setRoot(root);
-
-
-
-        if (flowPane.getChildren().size() > 0) {
+        boolean inputIsRight = checkInputFields(textToSearchArea, selectedDirArea, fileExtensionField);
+        if (inputIsRight) {
+            search(treeFiles, textToSearchArea.getText(), selectedDirArea.getText(), fileExtensionField.getText());
             flowPane.getChildren().clear();
+            flowPane.getChildren().add(treeFiles);
         }
-        flowPane.getChildren().add(treeFiles);
     }
 
 
-    private void loadFile() {
-        TreeItem<PathItem> item = treeFiles.getSelectionModel().getSelectedItem();
+
+    /**
+     * Загружает файл из узла item в поле input
+     * @param item узел TreeItem, в котором содержится файл
+     * @param input поле вывода содержимого файла
+     * @param infoLabel метка для вывода сообщений
+     */
+    private void loadFile(TreeItem<PathItem> item, TextInputControl input, Label infoLabel) {
         try {
             Path path = item.getValue().getPath();
             if (!Files.isDirectory(path)) {
-                contextArea.clear();
+                input.clear();
                 contextLabel.setText("Содержимое файла " + path + ":");
-                try (BufferedReader in = new BufferedReader(
-                        new InputStreamReader(new FileInputStream(path.toFile()), "UTF-8"))) {
-                    String str;
-                    while ((str = in.readLine()) != null) {
-                        contextArea.appendText(str+"\n");
+                try {
+                    FileInputStream fis = new FileInputStream(path.toFile());
+                    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis))) {
+                        String str;
+                        while ((str = in.readLine()) != null) {
+                            input.appendText(str+"\n");
+                        }
+                    } catch (IOException e) {
+                        infoLabel.setText("Ошибка при чтении файла " + path.toString());
                     }
-                } catch (IOException e) {
+                } catch (FileNotFoundException e) {
                     infoLabel.setText("Файла "+ path.toString() +" не существует.");
                 }
             } else {
-                item.setExpanded(true);
+                if (item.isExpanded()) {
+                    item.setExpanded(false);
+                } else {
+                    item.setExpanded(true);
+                }
             }
-        } catch (NullPointerException exc) {  // корневой узел не содержит объект Path
+        } catch (NullPointerException e) {
             // ignore
         }
+
     }
 
     @FXML
     public void loadFileMouseClicked(MouseEvent mouseEvent) {
-        loadFile();
+        TreeItem<PathItem> selectedItem = treeFiles.getSelectionModel().getSelectedItem();
+        loadFile(selectedItem, contextArea, infoLabel);
     }
 
     @FXML

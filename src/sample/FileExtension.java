@@ -1,7 +1,6 @@
 package sample;
 
 
-
 public class FileExtension {
     final static String DEFAULT_EXTENSION = ".log";
 
