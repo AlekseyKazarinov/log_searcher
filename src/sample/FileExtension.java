@@ -3,7 +3,7 @@ package sample;
 
 
 public class FileExtension {
-    final public static String DEFAULT_EXTENSION = ".log";
+    final static String DEFAULT_EXTENSION = ".log";
 
     /**
      * Проверяет, является ли строка расширением файла
@@ -12,11 +12,10 @@ public class FileExtension {
      */
 
 
-    public static boolean check(String input) {
+    static boolean check(String input) {
         input = input.toLowerCase();
-        return input.length() > 0 && input.matches("\\.[a-z0-9]+[.a-z0-9]*$");  // можно учесть случай последовательных расширений .
-    }                                                                       // например, *.tar.gz
-
+        return input.length() > 0 && input.matches("\\.[a-z0-9]+$");
+    }
 
 }
 

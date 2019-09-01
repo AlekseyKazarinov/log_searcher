@@ -6,6 +6,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
+import java.nio.charset.Charset;
+
 
 public class Main extends Application {
     static Stage mainStage;
@@ -20,7 +22,6 @@ public class Main extends Application {
 
         primaryStage.setResizable(false);
         mainStage = primaryStage;
-
     }
 
 

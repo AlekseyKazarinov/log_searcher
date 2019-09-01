@@ -1,19 +1,31 @@
 package sample;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
+
+/**
+ * Класс, описывающий каталоги и файлы, которые могут храниться в TreeItem
+ */
 public class PathItem {
-    private Path path;
+    private String fullPath;
+    private String name;
+
     PathItem(Path path) {
-        this.path = path;
+        this.fullPath = path.toString();
+        this.name = path.getFileName().toString();
     }
 
-    public Path getPath(){
-        return this.path;
+    public String getPathName() {
+        return this.fullPath;
+    }
+
+    public Path getPath() {
+        return Paths.get(fullPath);
     }
 
     @Override
     public String toString() {
-        return path.getFileName().toString();
+        return name;
     }
 }

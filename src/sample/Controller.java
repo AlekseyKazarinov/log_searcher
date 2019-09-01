@@ -9,20 +9,15 @@ import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javafx.stage.DirectoryChooser;
-import org.w3c.dom.ls.LSOutput;
 
 class InputGUIException extends RuntimeException{
 
@@ -50,12 +45,11 @@ public class Controller {
 
     Stage mainStage = Main.mainStage;
     Stage selectDirStage;
-    //final FileChooser fileChooser = new FileChooser();
-    final DirectoryChooser directoryChooser = new DirectoryChooser();
+    DirectoryChooser directoryChooser;
 
     @FXML
     public void clickSelectDir(ActionEvent event) {
-        //textFieldSelectedDir.clear();
+        directoryChooser = new DirectoryChooser();
         File dir = directoryChooser.showDialog(selectDirStage);
         if (dir != null) {
             selectedDirArea.setText(dir.getAbsolutePath());
@@ -95,7 +89,7 @@ public class Controller {
         Stream<Path> stream = Files.walk(startPath)
                 .filter(path -> !Files.isDirectory(path))
                 .map(path -> path.toFile())
-                .filter(file-> file.getAbsolutePath().endsWith(fileExtension))
+                .filter(file -> file.getAbsolutePath().endsWith(fileExtension))
                 .filter(file -> file.canRead())
                 .filter(file -> {
                     try {
@@ -116,44 +110,45 @@ public class Controller {
                 System.out.println(some.toString());
             }
         }
-
         return null;
     }
 
 
-    public static void createTree(TreeItem<PathItem> rootItem, String fileExtension, String text) throws IOException {
+    static void createTree(TreeItem<PathItem> rootItem, String fileExtension, String text) throws IOException {
+        boolean contains;
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())) {
 
             for (Path path : directoryStream) {
 
-                TreeItem<PathItem> newItem = new TreeItem<PathItem>(new PathItem(path));
-
-
+                TreeItem<PathItem> newItem = new TreeItem<>(new PathItem(path));
 
                 if (Files.isDirectory(path)) {
                     rootItem.getChildren().add(newItem);
-                    createTree(newItem, fileExtension, text);
                     newItem.setExpanded(false);
+                    createTree(newItem, fileExtension, text);
+                    // если в данном каталоге не оказалось подходящих файлов:
+                    if (newItem.getChildren().size() == 0) {
+                        rootItem.getChildren().remove(newItem);
+                    }
                 }
-                System.out.println(path.getFileName());
+
+               // System.out.println(path.getFileName());
                 if (!Files.isDirectory(path)){
                     File file = path.toFile();
                     System.out.println("not dir - "+path.getFileName()+ " " + file.getAbsolutePath());
                     if (file.getAbsolutePath().endsWith(fileExtension)) {
                         System.out.println("okay - "+path.getFileName());
-                        boolean contains;
-                        try {
-                            contains = FileSearch.containsWord(file.getAbsolutePath(), text);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            contains = false;
-                        }
+
+                        contains = FileSearch.hasText(file.getAbsolutePath(), text);  // true or false
                         if (contains) {
                             System.out.println("найден - " + file.getAbsolutePath());
                             rootItem.getChildren().add(newItem);
                         }
                     }
                 }
+
+
+
 
             }
         }
@@ -169,6 +164,7 @@ public class Controller {
         };
 
         String textToSearch = textToSearchArea.getText();
+
         if (textToSearch.length() > 0 ) {
             String text = textToSearchArea.getText();
             infoLabel.setText("Идёт поиск текста \""
@@ -202,6 +198,9 @@ public class Controller {
         }
         //treeFiles = new TreeView<>(root);
         treeFiles.setRoot(root);
+
+
+
         if (flowPane.getChildren().size() > 0) {
             flowPane.getChildren().clear();
         }
@@ -228,18 +227,18 @@ public class Controller {
             } else {
                 item.setExpanded(true);
             }
-        } catch (NullPointerException exc) {  // корневой узел не содержит path
+        } catch (NullPointerException exc) {  // корневой узел не содержит объект Path
             // ignore
         }
     }
 
     @FXML
-    public void loadSelectedItem(ActionEvent event) {
+    public void loadFileMouseClicked(MouseEvent mouseEvent) {
         loadFile();
     }
 
     @FXML
-    public void loadFileMouseClicked(MouseEvent mouseEvent) {
-        loadFile();
+    public void textSelectionButton(ActionEvent event) {
+        contextArea.selectAll();
     }
 }
