@@ -11,6 +11,8 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.Exchanger;
+import java.util.concurrent.Phaser;
 
 import javafx.stage.DirectoryChooser;
 
@@ -34,6 +36,7 @@ public class Controller {
 
 
     private Stage mainStage = Main.mainStage;
+    private Thread searcher;
 
     @FXML
     public void clickSelectDir(ActionEvent event) {
@@ -68,10 +71,15 @@ public class Controller {
      * @param fileExtension расширение файлов в дереве
      */
     private void search(TreeView<PathItem> treeFiles, String text, String dir, String fileExtension) {
-        Path startPath = Paths.get(selectedDirArea.getText());
+        Path startPath = Paths.get(dir);
         TreeItem<PathItem> root = new TreeItem<>(new PathItem(startPath));
         try {
-            FileSearch.createTreeRoot(root, fileExtensionField.getText(), text);
+            Exchanger<TreeItem<PathItem>> exchanger = new Exchanger<>();
+            //SearchThread thread = new SearchThread("searcher", exchanger, root, fileExtension, text);
+            //thread.start();
+            //root = exchanger.exchange(null);
+
+            //FileSearch.createTreeRoot(root, fileExtensionField.getText(), text);
             infoLabel.setText("Поиск файлов завершён.");
         } catch (Exception e ) {
             System.out.println(e.toString());
@@ -128,7 +136,24 @@ public class Controller {
     public void clickSearch(ActionEvent event) {
         boolean inputIsRight = checkInputFields(textToSearchArea, selectedDirArea, fileExtensionField);
         if (inputIsRight) {
-            search(treeFiles, textToSearchArea.getText(), selectedDirArea.getText(), fileExtensionField.getText());
+
+
+            if (searcher != null) {
+                searcher.interrupt();
+            }
+
+            searcher = new SearchThread("searcher",
+                    treeFiles,
+                    fileExtensionField.getText(),
+                    textToSearchArea.getText(),
+                    selectedDirArea.getText());
+
+            try {
+                searcher.join();
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            searcher.start();
             flowPane.getChildren().clear();
             flowPane.getChildren().add(treeFiles);
         }

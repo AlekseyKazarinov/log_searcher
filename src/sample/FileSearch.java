@@ -50,6 +50,9 @@ public class FileSearch {
      * @param text текст, который в них должен содержаться
      */
     static void createTreeRoot(TreeItem<PathItem> rootItem, String fileExtension, String text) {
+        if (Thread.currentThread().isInterrupted()) {
+            return;
+        }
         try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(rootItem.getValue().getPath())) {
 
             for (Path path : directoryStream) {
