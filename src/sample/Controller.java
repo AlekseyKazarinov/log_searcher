@@ -1,18 +1,14 @@
 package sample;
+
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
-
 import javafx.event.ActionEvent;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.Phaser;
+import java.nio.file.*;
 
 import javafx.stage.DirectoryChooser;
 
@@ -62,36 +58,11 @@ public class Controller {
         }
     }
 
-
-    /**
-     * Построение дерева по файлам, в которых есть искомый текст.
-     * @param treeFiles дерево файлов, которое будет строиться
-     * @param text искомый текст
-     * @param dir абсолютный путь каталога, в котором будут искаться файлы.
-     * @param fileExtension расширение файлов в дереве
-     */
-    private void search(TreeView<PathItem> treeFiles, String text, String dir, String fileExtension) {
-        Path startPath = Paths.get(dir);
-        TreeItem<PathItem> root = new TreeItem<>(new PathItem(startPath));
-        try {
-            Exchanger<TreeItem<PathItem>> exchanger = new Exchanger<>();
-            //SearchThread thread = new SearchThread("searcher", exchanger, root, fileExtension, text);
-            //thread.start();
-            //root = exchanger.exchange(null);
-
-            //FileSearch.createTreeRoot(root, fileExtensionField.getText(), text);
-            infoLabel.setText("Поиск файлов завершён.");
-        } catch (Exception e ) {
-            System.out.println(e.toString());
-            infoLabel.setText("Произошла ошибка при поиске файлов.");
-        }
-        treeFiles.setRoot(root);
-    }
-
     /**
      * Проверяет правильность введённых пользователем данных
-     * @param textToSearchArea поле с текстом, который ищется
-     * @param selectedDirArea поле, в котором хранится выбранный каталог
+     *
+     * @param textToSearchArea   поле с текстом, который ищется
+     * @param selectedDirArea    поле, в котором хранится выбранный каталог
      * @param fileExtensionField поле с расширением файлов, по которым осуществляется поиск
      * @return удовлетворяет условиям или нет
      */
@@ -106,7 +77,7 @@ public class Controller {
 
         // поле 2
         String textToSearch = textToSearchArea.getText();
-        if (textToSearch.length() > 0 ) {
+        if (textToSearch.length() > 0) {
             count++;
         } else {
             infoLabel.setText("Текст, который требуется найти, не введён.");
@@ -136,7 +107,8 @@ public class Controller {
     public void clickSearch(ActionEvent event) {
         boolean inputIsRight = checkInputFields(textToSearchArea, selectedDirArea, fileExtensionField);
         if (inputIsRight) {
-
+            flowPane.getChildren().clear();
+            flowPane.getChildren().add(treeFiles);
 
             if (searcher != null) {
                 searcher.interrupt();
@@ -147,44 +119,31 @@ public class Controller {
                     fileExtensionField.getText(),
                     textToSearchArea.getText(),
                     selectedDirArea.getText());
-
-            try {
-                searcher.join();
-            } catch (InterruptedException e) {
-                // ignore
-            }
+            searcher.setPriority(Thread.NORM_PRIORITY + 3);
+            searcher.setDaemon(true);  // это обслуживающий поток
             searcher.start();
-            flowPane.getChildren().clear();
-            flowPane.getChildren().add(treeFiles);
         }
     }
 
 
-
     /**
-     * Загружает файл из узла item в поле input
-     * @param item узел TreeItem, в котором содержится файл
-     * @param input поле вывода содержимого файла
+     * Загружает файл, соответствующий узлу PathItem, в поле context
+     *
+     * @param item      узел TreeItem, в котором содержится файл
+     * @param context   поле вывода содержимого файла
      * @param infoLabel метка для вывода сообщений
      */
-    private void loadFile(TreeItem<PathItem> item, TextInputControl input, Label infoLabel) {
+    private void loadFile(TreeItem<PathItem> item, TextInputControl context, Label contextLabel, Label infoLabel) {
         try {
             Path path = item.getValue().getPath();
             if (!Files.isDirectory(path)) {
-                input.clear();
-                contextLabel.setText("Содержимое файла " + path + ":");
+                context.clear();
+                contextLabel.setText("Содержимое файла " + path.getFileName() + ":");
                 try {
-                    FileInputStream fis = new FileInputStream(path.toFile());
-                    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis))) {
-                        String str;
-                        while ((str = in.readLine()) != null) {
-                            input.appendText(str+"\n");
-                        }
-                    } catch (IOException e) {
-                        infoLabel.setText("Ошибка при чтении файла " + path.toString());
-                    }
-                } catch (FileNotFoundException e) {
-                    infoLabel.setText("Файла "+ path.toString() +" не существует.");
+                    context.setText(Loader.loadFromFile(path.toFile()));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    infoLabel.setText("Возникла шибка при чтении файла " + path.toString());
                 }
             } else {
                 if (item.isExpanded()) {
@@ -202,7 +161,7 @@ public class Controller {
     @FXML
     public void loadFileMouseClicked(MouseEvent mouseEvent) {
         TreeItem<PathItem> selectedItem = treeFiles.getSelectionModel().getSelectedItem();
-        loadFile(selectedItem, contextArea, infoLabel);
+        loadFile(selectedItem, contextArea, contextLabel, infoLabel);
     }
 
     @FXML
