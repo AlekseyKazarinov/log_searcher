@@ -1,10 +1,10 @@
-package sample;
+package sample.activity;
 
 import java.io.*;
 
-class Loader {
+public class Loader {
 
-    static String loadFromFile(File file) throws IOException {
+    public static String loadFromFile(File file) throws IOException {
         FileInputStream fis = new FileInputStream(file);
         StringBuilder sb = new StringBuilder();
         try (BufferedReader in = new BufferedReader(new InputStreamReader(fis))) {

@@ -1,4 +1,4 @@
-package sample;
+package sample.activity;
 
 import javafx.application.Platform;
 import javafx.scene.control.TreeItem;
@@ -21,11 +21,11 @@ public class SearchThread extends Thread {
     private String text;
     private String dir;
 
-    SearchThread(String name,
-                 TreeView<PathItem> treeFiles,  // дерево файлов, которое будет строиться
-                 String fileExtension,          // расширение файлов в дереве
-                 String text,                   // искомый текст
-                 String dir) {                  // абсолютный путь каталога, в котором будут искаться файлы
+    public SearchThread(String name,
+                        TreeView<PathItem> treeFiles,  // дерево файлов, которое будет строиться
+                        String fileExtension,          // расширение файлов в дереве
+                        String text,                   // искомый текст
+                        String dir) {                  // абсолютный путь каталога, в котором будут искаться файлы
         super(name);
         this.treeFiles = treeFiles;
         this.fileExtension = fileExtension;
@@ -123,13 +123,15 @@ public class SearchThread extends Thread {
 
     @Override
     public void run() {
-        System.out.printf("Поток с именем %s начал свою работу.\n", Thread.currentThread().getName());
+        //System.out.printf("Поток с именем %s начал свою работу.\n", Thread.currentThread().getName());
+
         this.search();
-        if (Thread.currentThread().isInterrupted()) {
+
+        /*if (Thread.currentThread().isInterrupted()) {
             System.out.printf("Поток с именем %s прерван.\n", Thread.currentThread().getName());
         } else {
             System.out.printf("Поток с именем %s завершил работу успешно.\n", Thread.currentThread().getName());
-        }
+        }*/
     }
 
 }

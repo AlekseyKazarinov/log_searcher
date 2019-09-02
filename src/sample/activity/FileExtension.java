@@ -1,8 +1,8 @@
-package sample;
+package sample.activity;
 
 
-class FileExtension {
-    final static String DEFAULT_EXTENSION = ".log";
+public class FileExtension {
+    final public static String DEFAULT_EXTENSION = ".log";
     private final static String regex = "\\.[a-z0-9]+$";
 
     /**
@@ -12,7 +12,7 @@ class FileExtension {
      * @return true, если является, иначе - fasle.
      */
 
-    static boolean check(String input) {
+    public static boolean check(String input) {
         input = input.toLowerCase();
         return input.length() > 0 && input.matches(regex);
     }

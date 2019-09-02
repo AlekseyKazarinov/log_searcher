@@ -11,6 +11,10 @@ import java.io.*;
 import java.nio.file.*;
 
 import javafx.stage.DirectoryChooser;
+import sample.activity.FileExtension;
+import sample.activity.Loader;
+import sample.activity.PathItem;
+import sample.activity.SearchThread;
 
 
 public class Controller {

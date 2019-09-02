@@ -1,4 +1,4 @@
-package sample;
+package sample.activity;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
