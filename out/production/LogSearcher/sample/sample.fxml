@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.effect.Bloom?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="pane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="200.0" minWidth="400.0" prefHeight="485.0" prefWidth="951.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+   <children>
+      <AnchorPane layoutX="5.0" layoutY="5.0" maxWidth="200.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="5.0" AnchorPane.topAnchor="5.0">
+         <children>
+            <Label fx:id="label4" prefHeight="17.0" prefWidth="217.0" text="Найденные файлы:" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            <AnchorPane fx:id="anchorPane" layoutY="20.0" maxWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="20.0">
+               <children>
+                  <TreeView fx:id="treeFiles" maxWidth="200.0" onMouseClicked="#loadFileMouseClicked" prefHeight="458.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        </TreeView>
+               </children>
+            </AnchorPane>
+         </children>
+      </AnchorPane>
+      <VBox layoutX="225.0" layoutY="5.0" minWidth="200.0" prefWidth="320.0" spacing="5.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="215.0" AnchorPane.topAnchor="5.0">
+         <children>
+            <Label fx:id="label1" text="Выберите каталог для поиска:" />
+            <HBox spacing="10.0">
+               <children>
+                  <Button fx:id="buttonSelectDir" minHeight="25.0" minWidth="80.0" mnemonicParsing="false" onAction="#clickSelectDir" prefHeight="25.0" prefWidth="80.0" text="Выбрать..." />
+                  <TextArea fx:id="selectedDirArea" editable="false" maxHeight="-Infinity" minHeight="40.0" prefHeight="40.0" prefWidth="250.0" />
+               </children>
+            </HBox>
+            <Label fx:id="label2" lineSpacing="10.0" text="Введите текст, который хотите найти:" />
+            <TextArea fx:id="textToSearchArea" prefHeight="300.0" prefWidth="330.0" wrapText="true" />
+            <HBox prefHeight="25.0" spacing="10.0">
+               <children>
+                  <Label fx:id="label3" prefHeight="19.0" prefWidth="280.0" text="Расширение файлов, в которых ищется текст:" />
+                  <TextField fx:id="fileExtensionField" minHeight="25.0" minWidth="40.0" prefHeight="25.0" prefWidth="80.0" text=".log" />
+               </children>
+            </HBox>
+            <HBox spacing="20.0">
+               <children>
+                  <Button fx:id="searchButton" mnemonicParsing="false" onAction="#clickSearch" prefHeight="25.0" prefWidth="71.0" text="Найти" />
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#clickCancel" text="Отмена" visible="false" />
+               </children>
+            </HBox>
+            <Label fx:id="infoLabel" prefHeight="15.0" prefWidth="320.0">
+               <VBox.margin>
+                  <Insets />
+               </VBox.margin>
+               <effect>
+                  <Bloom />
+               </effect>
+            </Label>
+         </children>
+      </VBox>
+      <AnchorPane layoutX="585.0" layoutY="5.0" AnchorPane.bottomAnchor="5.0" AnchorPane.leftAnchor="545.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
+         <children>
+            <Label fx:id="contextLabel" text="Содержимое:" />
+            <TextArea fx:id="contextArea" editable="false" layoutY="23.0" minHeight="200.0" minWidth="200.0" wrapText="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="5.0" AnchorPane.topAnchor="20.0">
+               <font>
+                  <Font name="Arial" size="12.0" />
+               </font>
+            </TextArea>
+         </children>
+      </AnchorPane>
+   </children>
+</AnchorPane>
