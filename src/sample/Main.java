@@ -16,10 +16,9 @@ public class Main extends Application {
         primaryStage.setTitle("Log Searcher");
         primaryStage.setScene(new Scene(root));
         primaryStage.show();
-
-        primaryStage.setResizable(false);
         mainStage = primaryStage;
-
+        primaryStage.setMinWidth(800);
+        primaryStage.setMinHeight(300);
     }
 
     public static void main(String[] args) {

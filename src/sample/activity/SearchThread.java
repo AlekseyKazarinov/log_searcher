@@ -118,6 +118,7 @@ public class SearchThread extends Thread {
             root.setExpanded(true);
             // т.к. дочерний поток не может напрямую изменять элементы интерфейса javafx:
             Platform.runLater(() -> this.treeFiles.setRoot(root));
+            treeFiles.setOnEditStart(null);
         }
     }
 

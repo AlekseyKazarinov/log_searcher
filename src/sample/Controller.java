@@ -3,14 +3,15 @@ package sample;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.stage.DirectoryChooser;
+
 import javafx.event.ActionEvent;
 
 import java.io.*;
 import java.nio.file.*;
 
-import javafx.stage.DirectoryChooser;
 import sample.activity.FileExtension;
 import sample.activity.Loader;
 import sample.activity.PathItem;
@@ -18,9 +19,10 @@ import sample.activity.SearchThread;
 
 
 public class Controller {
-    public FlowPane flowPane;
     public TextArea contextArea;
     public Label contextLabel;
+    public AnchorPane anchorPane;
+    public Button cancelButton;
     @FXML
     Label label1, label2, label3, label4, infoLabel;
     @FXML
@@ -52,14 +54,12 @@ public class Controller {
     private boolean checkFileExtensionField(TextInputControl fileExtensionField) {
         String input = fileExtensionField.getText();
         boolean isExtension = FileExtension.check(input);
-        if (isExtension) {
-            infoLabel.setText("Установлено расширение файла: " + input);
-            return true;
-        } else {
+        if (!isExtension) {
             fileExtensionField.setText(FileExtension.DEFAULT_EXTENSION);
             infoLabel.setText("Неправильное расширение. Установлено исходное.");
             return false;
         }
+        return true;
     }
 
     /**
@@ -84,26 +84,18 @@ public class Controller {
         if (textToSearch.length() > 0) {
             count++;
         } else {
-            infoLabel.setText("Текст, который требуется найти, не введён.");
+            infoLabel.setText("Введите текст, который требуется найти");
         }
 
         // поле 3
-        if (selectedDirArea.getText().length() != 0) {
+        if (selectedDirArea.getText() != null && selectedDirArea.getText().length() > 0) {
             count++;
         } else {
-            infoLabel.setText("Не выбран каталог, в котором будем искать.");
+            infoLabel.setText("Выберите каталог, в котором будем искать файлы.");
         }
 
-        // если все поля заполнены
-        if (count == 3) {
-            String text = textToSearchArea.getText();
-            infoLabel.setText("Идёт поиск текста \""
-                    + text.substring(0, Math.min(text.length(), 20))
-                    + (text.length() > 20 ? "...\"" : "\""));
-            return true;
-        } else {
-            return false;
-        }
+        // все ли 3 поля заполнены согласно требованиям
+        return count == 3;
     }
 
 
@@ -111,8 +103,8 @@ public class Controller {
     public void clickSearch(ActionEvent event) {
         boolean inputIsRight = checkInputFields(textToSearchArea, selectedDirArea, fileExtensionField);
         if (inputIsRight) {
-            flowPane.getChildren().clear();
-            flowPane.getChildren().add(treeFiles);
+            anchorPane.getChildren().clear();
+            anchorPane.getChildren().add(treeFiles);
 
             if (searcher != null) {
                 searcher.interrupt();
@@ -126,6 +118,8 @@ public class Controller {
             searcher.setPriority(Thread.NORM_PRIORITY + 3);
             searcher.setDaemon(true);  // это обслуживающий поток
             searcher.start();
+            cancelButton.setVisible(true);
+            infoLabel.setText("После окончания поиска слева появится список файлов");
         }
     }
 
@@ -135,6 +129,7 @@ public class Controller {
      *
      * @param item      узел TreeItem, в котором содержится файл
      * @param context   поле вывода содержимого файла
+     * @param contextLabel метка над полем содержимого файла
      * @param infoLabel метка для вывода сообщений
      */
     private void loadFile(TreeItem<PathItem> item, TextInputControl context, Label contextLabel, Label infoLabel) {
@@ -168,8 +163,10 @@ public class Controller {
         loadFile(selectedItem, contextArea, contextLabel, infoLabel);
     }
 
-    @FXML
-    public void textSelectionButton(ActionEvent event) {
-        contextArea.selectAll();
+
+    public void clickCancel(ActionEvent event) {
+        this.searcher.interrupt();
+        cancelButton.setVisible(false);
+        infoLabel.setText("Поиск отменён");
     }
 }
